@@ -1,0 +1,7 @@
+CREATE TABLE weather_subscriber
+(
+  phone_number    VARCHAR(20) NOT NULL,                 # Phone number of the subscriber
+  name            VARCHAR(150) NOT NULL,                # Name of the subscriber
+  zipcode         CHAR(5) NOT NULL,                	# Zipcode of the subscriber
+  PRIMARY KEY     (phone_number)                       	# Make the phone_number the primary key
+);
