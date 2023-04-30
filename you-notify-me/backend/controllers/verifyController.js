@@ -5,6 +5,7 @@ const client = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN);
 
 export async function getCode(req, res) {
   console.log("Received a get code request" + req.query.phoneNumber);
+  console.log("Process env=" + process.env.VERIFY_SERVICE_SID);
   client.verify
     .services(process.env.VERIFY_SERVICE_SID)
     .verifications.create({
@@ -28,20 +29,32 @@ export async function verifyAndSubscribe(req, res) {
     })
     .then((verifyResponse) => subscribeIfVerified(req, verifyResponse))
     .then((verifyResponse) => {
-      res.status(200).send(verifyResponse.status == "approved");
+      if (verifyResponse.status != "approved") {
+        res.status(400).send({ error: "Incorrect code" });
+      }
+      res.status(200);
     })
-    .catch((e) => {
-      console.log("The error is " + e);
+    .catch((error) => {
+      if (error.message === "Duplicate entry found") {
+        // You can also send a response to the client indicating the duplicate entry
+        res.status(409).send({ error: "Duplicate entry found" });
+      } else {
+        console.error("Error while verifying and subscribing:", error);
+      }
     });
 }
 
-function subscribeIfVerified(request, verifyResponse) {
+async function subscribeIfVerified(request, verifyResponse) {
   if (verifyResponse.status == "approved") {
-    databaseWriter.addWeatherSubscriber(
-      request.query.name,
-      request.query.phoneNumber,
-      request.query.zipcode
-    );
+    try {
+      await databaseWriter.addWeatherSubscriber(
+        request.query.name,
+        request.query.phoneNumber,
+        request.query.zipcode
+      );
+    } catch (error) {
+      throw error;
+    }
   }
   return verifyResponse;
 }

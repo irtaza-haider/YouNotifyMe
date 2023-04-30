@@ -3,22 +3,24 @@ import * as verify from "../api/verify";
 
 function Opt(props) {
   const [enteredCode, setEnteredCode] = useState(0);
-  const [incorrectCode, setInorrectCode] = useState(false);
-  const [correctCode, setCorrectCode] = useState(false);
+  const [responseStatus, setResponseStatus] = useState(0);
 
   const onCodeChange = (event) => {
     setEnteredCode(event.target.value);
   };
 
   const onSubmit = () => {
-    let approved = verify.verifyCodeAndSubscribe(
-      enteredCode,
-      props.subscriber.name,
-      props.subscriber.phoneNumber,
-      props.subscriber.zipcode
-    );
-    setCorrectCode(approved);
-    setInorrectCode(!approved);
+    // TODO: Add validation to ensure only 6 digits entered
+    verify
+      .verifyCodeAndSubscribe(
+        enteredCode,
+        props.subscriber.name,
+        props.subscriber.phoneNumber,
+        props.subscriber.zipcode
+      )
+      .then((response) => {
+        setResponseStatus(response.status);
+      });
   };
 
   return (
@@ -32,10 +34,13 @@ function Opt(props) {
         <input type="number" onChange={onCodeChange} />
       </label>
       <input type="submit" value="Submit" onClick={() => onSubmit()} />
-      {incorrectCode && (
+      {responseStatus === 400 && (
         <h1>You've entered an incorrect code. Please try again</h1>
       )}
-      {correctCode && <h1>Congratulation, you're subscribed!!</h1>}
+      {responseStatus === 409 && (
+        <h1>This phone number has already been registered</h1>
+      )}
+      {responseStatus === 200 && <h1>Congratulation, you're subscribed!!</h1>}
     </React.Fragment>
   );
 }

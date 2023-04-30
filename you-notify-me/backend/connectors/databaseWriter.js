@@ -10,10 +10,34 @@ var connection = mysql.createConnection({
 
 connection.connect();
 
-export function addWeatherSubscriber(name, phoneNumber, zipcode) {
-  const query = `INSERT INTO ${constants.WEATHER_SUBSCRIBER_TABLE} (name, phone_number, zipcode) VALUES ('${name}', '${phoneNumber}', '${zipcode}')`;
-  connection.query(query, function (err, rows, fields) {
-    if (err) throw err;
-    console.log("Failed to add a subscriber ", err);
+export async function addWeatherSubscriber(name, phoneNumber, zipcode) {
+  // First, check for duplicate entries
+  const checkQuery = `SELECT * FROM ${constants.WEATHER_SUBSCRIBER_TABLE} WHERE phone_number = '${phoneNumber}'`;
+
+  try {
+    const result = await queryAsync(checkQuery);
+
+    if (result.length > 0) {
+      // Duplicate entry found, throw a custom error
+      throw new Error("Duplicate entry found");
+    } else {
+      // No duplicate entry found, proceed with insertion
+      const insertQuery = `INSERT INTO ${constants.WEATHER_SUBSCRIBER_TABLE} (name, phone_number, zipcode) VALUES ('${name}', '${phoneNumber}', '${zipcode}')`;
+      await queryAsync(insertQuery);
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+function queryAsync(sql) {
+  return new Promise((resolve, reject) => {
+    connection.query(sql, (error, results, fields) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
   });
 }
