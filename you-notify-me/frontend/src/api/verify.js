@@ -1,8 +1,10 @@
 import axios from "axios";
+import API_BASE_URL from "../config";
 
 export async function getCode(phoneNumber) {
+  console.log("The path=" + API_BASE_URL);
   axios
-    .get("http://localhost:8000/verify/getcode", {
+    .get(`${API_BASE_URL}/verify/getcode`, {
       params: {
         phoneNumber: phoneNumber,
       },
@@ -14,7 +16,7 @@ export async function getCode(phoneNumber) {
 export async function verifyCodeAndSubscribe(code, name, phoneNumber, zipcode) {
   try {
     const response = await axios.get(
-      "http://localhost:8000/verify/verifyandsubscribe",
+      `${API_BASE_URL}/verify/verifyandsubscribe`,
       {
         params: {
           code: code,
